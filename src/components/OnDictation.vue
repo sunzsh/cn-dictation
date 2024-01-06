@@ -252,7 +252,8 @@ export default {
       this.$router.replace({
         name: 'ShowResult',
         params: {
-          result: this.charts_writed
+          result: this.charts_writed,
+          inErrorMode: this.$route.params.inErrorMode
         }
       })
     }

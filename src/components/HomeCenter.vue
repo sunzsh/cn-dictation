@@ -17,6 +17,15 @@
     </div>
     <div class="cur_book-mask" :class="{'open': curBook.opening }"></div>
     <div class="unit_wrapper">
+      <template v-if="errorCharsInThisBook && errorCharsInThisBook.length > 0">
+        <div class="unit_item item_errorbook" @click="selectErrorBook()">
+          <div class="unit_item-title">
+            <i class="el-icon-check check-icon"></i>
+            <span>！！！错题本</span>
+          </div>
+          <div class="unit_item-subtitle">{{(errorCharsInThisBook||[]).length}}个</div>
+        </div>
+      </template>
       <template v-if="curBook.value && curBook.value.klasses.length > 1">
         <div v-for="(unit) in curBook.value.klasses" :key="unit.title" class="unit_item" :class="{'selected': isSelectedUnit(unit) }" @click="selectUnit(unit)">
           <div class="unit_item-title">
@@ -35,6 +44,7 @@
 
 <script>
 import BOOKS from '@/books'
+import { getErrorCharsByBook } from '@/service/ErrorBookService'
 import Clickoutside from 'element-ui/src/utils/clickoutside'
 export default {
   directives: { Clickoutside },
@@ -72,6 +82,16 @@ export default {
     isSelectedUnit(unit) {
       return this.selectedUnit.findIndex(item => item.title === unit.title) > -1
     },
+    selectErrorBook() {
+      this.$router.replace({
+        name: 'OnDictation',
+        params: {
+          book: this.curBook.value,
+          units: [{ 'title': '错题本', 'newChars': this.errorCharsInThisBook }],
+          inErrorMode: true
+        }
+      })
+    },
     startDictation() {
       if (this.selectedUnit.length === 0) {
         this.$message({
@@ -84,7 +104,8 @@ export default {
         name: 'OnDictation',
         params: {
           book: this.curBook.value,
-          units: this.selectedUnit
+          units: this.selectedUnit,
+          inErrorMode: false
         }
       })
     
@@ -95,6 +116,9 @@ export default {
       return this.selectedUnit.reduce((total, unit) => {
         return total + unit.newChars.length
       }, 0)
+    },
+    errorCharsInThisBook() {
+      return getErrorCharsByBook(this.curBook.value);
     }
   }
 }
@@ -225,6 +249,13 @@ export default {
         white-space: nowrap;
         overflow: hidden;
         flex-shrink: 0;
+      }
+      &.item_errorbook {
+        color: #ff0000;
+        font-weight: bold;
+        .unit_item-subtitle {
+          color: #ff0000;
+        }
       }
     }
   }

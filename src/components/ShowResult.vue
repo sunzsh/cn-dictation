@@ -26,6 +26,7 @@
 
 <script>
 import html2canvas from 'html2canvas';
+import { addErrorChar, removeErrorChar } from '@/service/ErrorBookService'
 import { addResizeListener, removeResizeListener } from 'element-ui/src/utils/resize-event';
 export default {
   data() {
@@ -51,7 +52,6 @@ export default {
     }
     this.currentTime = `${year}-${fillLength(month)}-${fillLength(date)} ${fillLength(hour)}:${fillLength(minute)}:${fillLength(second)}`;
 
-
     if (!this.$route.params.result) {
       this.$router.replace({
         name: 'HomeCenter'
@@ -63,6 +63,12 @@ export default {
     this.$nextTick(() => {
       this.calcContentItemGap();
     })
+
+    console.log(this.$route.params, '----');
+    // 如果是错题模式，默认加载全错，需要用户自己选择正确的，这时系统将会自动从错题本中剔除
+    if (this.$route.params.inErrorMode) {
+      this.errs = this.result.map(item => item.char.newChar);
+    }
   },
   beforeDestroy() {
     removeResizeListener(this.$refs.content, this.calcContentItemGap);
@@ -96,8 +102,10 @@ export default {
     toggleErr(item) {
       if (this.errs.indexOf(item.char.newChar) > -1) {
         this.errs.splice(this.errs.indexOf(item.char.newChar), 1);
+        removeErrorChar(item.char.newChar)
       } else {
         this.errs.push(item.char.newChar);
+        addErrorChar(item.char.newChar)
       }
     },
     isError(item) {
